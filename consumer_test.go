@@ -136,16 +136,14 @@ func TestListenAndConsume(t *testing.T) {
 
 		time.Sleep(1 * time.Millisecond) // Give first gorutine time to start
 
-		var returnErr error
 		go func() {
-			returnErr = c.ListenAndConsume()
+			err := c.ListenAndConsume()
+			if err == nil {
+				panic("Expected error but got nil")
+			}
 		}()
 
 		time.Sleep(5 * time.Millisecond)
-
-		if returnErr == nil {
-			t.Fatal("Expected error but got nil")
-		}
 	})
 
 	t.Run("Nil source should error", func(t *testing.T) {
