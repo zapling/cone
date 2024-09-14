@@ -48,6 +48,10 @@ func (c *Consumer) register(subject string, handler Handler) error {
 		return fmt.Errorf("not allowed to register handler while running")
 	}
 
+	if subject == "" {
+		return fmt.Errorf("empty subject is not allowed")
+	}
+
 	c.handlers[subject] = handler
 	return nil
 }
