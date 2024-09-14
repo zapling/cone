@@ -1,5 +1,7 @@
 package cone
 
+import "context"
+
 type (
 	Handler interface {
 		Serve(Response, Event)
@@ -7,14 +9,25 @@ type (
 
 	HandlerFunc func(Response, Event)
 
+	Response interface {
+		Ack() error
+		Nak() error
+	}
+
 	Event interface {
 		Subject() string
 		Body() []byte
 	}
 
-	Response interface {
-		Ack() error
-		Nak() error
+	Source interface {
+		Start() error
+		Stop(ctx context.Context) error
+		GetNextEvent() (ResponseAndEvent, error)
+	}
+
+	ResponseAndEvent interface {
+		Response
+		Event
 	}
 )
 
