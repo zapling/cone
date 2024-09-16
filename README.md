@@ -11,3 +11,10 @@ c.HandleFunc("event.subject", func(r cone.Response, e cone.Event) {
 
 c.ListenAndConsume()
 ```
+
+# Todo
+
+- [ ] Event context
+- [ ] Event headers
+- [ ] Handler middleware
+- [ ] Consumer subject wildcard `event.*`
