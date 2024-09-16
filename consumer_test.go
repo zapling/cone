@@ -39,8 +39,8 @@ func TestHandle(t *testing.T) {
 	t.Run("Same subject should override previous handler", func(t *testing.T) {
 		c := cone.New(nil)
 		var handlerCalled string
-		var firstHandler cone.HandlerFunc = func(_ cone.Response, _ cone.Event) { handlerCalled = "first" }
-		var secondHandler cone.HandlerFunc = func(_ cone.Response, _ cone.Event) { handlerCalled = "second" }
+		var firstHandler cone.HandlerFunc = func(_ cone.Response, _ *cone.Event) { handlerCalled = "first" }
+		var secondHandler cone.HandlerFunc = func(_ cone.Response, _ *cone.Event) { handlerCalled = "second" }
 		c.Handle("event.subject", firstHandler)
 		c.Handle("event.subject", secondHandler)
 		r := conetest.NewRecorder()
@@ -71,8 +71,8 @@ func TestHandleFunc(t *testing.T) {
 	t.Run("Same subject should override previous handler", func(t *testing.T) {
 		c := cone.New(nil)
 		var handlerCalled string
-		var firstHandler cone.HandlerFunc = func(_ cone.Response, _ cone.Event) { handlerCalled = "first" }
-		var secondHandler cone.HandlerFunc = func(_ cone.Response, _ cone.Event) { handlerCalled = "second" }
+		var firstHandler cone.HandlerFunc = func(_ cone.Response, _ *cone.Event) { handlerCalled = "first" }
+		var secondHandler cone.HandlerFunc = func(_ cone.Response, _ *cone.Event) { handlerCalled = "second" }
 		c.HandleFunc("event.subject", firstHandler)
 		c.HandleFunc("event.subject", secondHandler)
 		r := conetest.NewRecorder()
@@ -115,7 +115,7 @@ func TestServe(t *testing.T) {
 
 	t.Run("Registred event should ack", func(t *testing.T) {
 		c := cone.New(nil)
-		c.HandleFunc("is.wanted", func(_ cone.Response, _ cone.Event) {})
+		c.HandleFunc("is.wanted", func(_ cone.Response, _ *cone.Event) {})
 		r := conetest.NewRecorder()
 		c.Serve(r, conetest.NewEvent("is.wanted", nil))
 		if r.Result() != conetest.Ack {
@@ -160,7 +160,7 @@ func TestListenAndConsume(t *testing.T) {
 		source.AddEvent(event)
 
 		c := cone.New(source)
-		c.HandleFunc("event.subject", func(r cone.Response, _ cone.Event) {
+		c.HandleFunc("event.subject", func(r cone.Response, _ *cone.Event) {
 			_ = r.Ack()
 		})
 
@@ -188,7 +188,7 @@ func TestShutdown(t *testing.T) {
 		source := conetest.NewSource()
 		source.AddEvent(conetest.NewEvent("event.subject", nil))
 		c := cone.New(source)
-		c.HandleFunc("event.subject", func(r cone.Response, _ cone.Event) {
+		c.HandleFunc("event.subject", func(r cone.Response, _ *cone.Event) {
 			time.Sleep(1 * time.Second)
 			_ = r.Ack()
 		})

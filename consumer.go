@@ -56,14 +56,14 @@ func (c *Consumer) register(subject string, handler Handler) error {
 	return nil
 }
 
-func (c *Consumer) Serve(r Response, e Event) {
+func (c *Consumer) Serve(r Response, e *Event) {
 	if err := c.serveEvent(r, e); err != nil {
 		panic(err)
 	}
 }
 
-func (c *Consumer) serveEvent(r Response, e Event) error {
-	handler, ok := c.handlers[e.Subject()]
+func (c *Consumer) serveEvent(r Response, e *Event) error {
+	handler, ok := c.handlers[e.Subject]
 	if !ok {
 		return r.Nak()
 	}
@@ -93,7 +93,7 @@ func (c *Consumer) ListenAndConsume() error {
 			return ErrConsumerStopped
 		}
 
-		event, err := c.source.GetNextEvent()
+		response, event, err := c.source.Next()
 		if err != nil {
 			return err
 		}
@@ -105,7 +105,7 @@ func (c *Consumer) ListenAndConsume() error {
 		c.activeHandles.Add(1)
 		go func() {
 			defer c.activeHandles.Done()
-			c.Serve(event, event)
+			c.Serve(response, event)
 		}()
 	}
 }

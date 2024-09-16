@@ -1,22 +1,19 @@
 package conetest
 
-import "github.com/zapling/cone"
+import (
+	"context"
 
-var _ cone.Event = &Event{}
+	"github.com/zapling/cone"
+)
 
-func NewEvent(subject string, body []byte) *Event {
-	return &Event{subject: subject, body: body}
+func NewEvent(subject string, body []byte) *cone.Event {
+	return NewEventWithContext(context.Background(), subject, body)
 }
 
-type Event struct {
-	subject string
-	body    []byte
-}
-
-func (e *Event) Subject() string {
-	return e.subject
-}
-
-func (e *Event) Body() []byte {
-	return e.body
+func NewEventWithContext(ctx context.Context, subject string, body []byte) *cone.Event {
+	event, err := cone.NewEventWithContext(ctx, subject, body)
+	if err != nil {
+		panic(err)
+	}
+	return event
 }

@@ -34,7 +34,7 @@ func (s *Source) Stop(ctx context.Context) error {
 	return nil // We have nothing to do here
 }
 
-func (s *Source) GetNextEvent() (cone.ResponseAndEvent, error) {
+func (s *Source) Next() (cone.Response, *cone.Event, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -44,13 +44,13 @@ func (s *Source) GetNextEvent() (cone.ResponseAndEvent, error) {
 		}
 
 		s.events[i].isProcessing = true
-		return s.events[i], nil
+		return s.events[i], &s.events[i].Event, nil
 	}
 
-	return nil, nil
+	return nil, nil, nil
 }
 
-func (s *Source) AddEvent(e *Event) {
+func (s *Source) AddEvent(e *cone.Event) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -106,7 +106,7 @@ func (s *Source) removeEventFromQueue(id int) {
 }
 
 type sourceEvent struct {
-	Event
+	cone.Event
 	source *Source
 
 	id           int

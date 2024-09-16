@@ -11,8 +11,7 @@ import (
 
 var (
 	_ cone.Source   = &Source{}
-	_ cone.Event    = &event{}
-	_ cone.Response = &event{}
+	_ cone.Response = &responseAndEvent{}
 )
 
 func New(consumer jetstream.Consumer, opts ...jetstream.PullConsumeOpt) *Source {
@@ -24,11 +23,11 @@ type Source struct {
 	consumeContext jetstream.ConsumeContext
 	opts           []jetstream.PullConsumeOpt
 
-	events chan *event
+	responseAndEvents chan *responseAndEvent
 }
 
 func (s *Source) Start() error {
-	s.events = make(chan *event)
+	s.responseAndEvents = make(chan *responseAndEvent)
 	consumeContext, err := s.consumer.Consume(s.messageHandler(), s.opts...)
 	if err != nil {
 		return fmt.Errorf("failed to start: %w", err)
@@ -54,43 +53,41 @@ func (s *Source) Stop(ctx context.Context) error {
 	}
 
 	s.consumeContext = nil
-	close(s.events)
+	close(s.responseAndEvents)
 
 	return nil
 }
 
-func (s *Source) GetNextEvent() (cone.ResponseAndEvent, error) {
+func (s *Source) Next() (cone.Response, *cone.Event, error) {
 	select {
-	case event := <-s.events:
-		return event, nil
+	case responseEvent := <-s.responseAndEvents:
+		return responseEvent, responseEvent.Event, nil
 	case <-time.After(10 * time.Millisecond):
-		return nil, nil
+		return nil, nil, nil
 	}
 }
 
 func (s *Source) messageHandler() func(jetstream.Msg) {
 	return func(m jetstream.Msg) {
-		event := &event{m: m}
-		s.events <- event
+		event, err := cone.NewEvent(m.Subject(), m.Data())
+		if err != nil {
+			// TODO: Somehow not lose this info?
+			_ = m.Nak()
+			return
+		}
+		s.responseAndEvents <- &responseAndEvent{Event: event, m: m}
 	}
 }
 
-type event struct {
+type responseAndEvent struct {
+	*cone.Event
 	m jetstream.Msg
 }
 
-func (e *event) Subject() string {
-	return e.m.Subject()
-}
-
-func (e *event) Body() []byte {
-	return e.m.Data()
-}
-
-func (e *event) Ack() error {
+func (e *responseAndEvent) Ack() error {
 	return e.m.Ack()
 }
 
-func (e *event) Nak() error {
+func (e *responseAndEvent) Nak() error {
 	return e.m.Nak()
 }
