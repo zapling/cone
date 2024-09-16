@@ -18,3 +18,4 @@ c.ListenAndConsume()
 - [ ] Event headers
 - [ ] Handler middleware
 - [ ] Consumer subject wildcard `event.*`
+- [ ] Source benchmark (Jetstream)
