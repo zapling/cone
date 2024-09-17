@@ -75,6 +75,7 @@ func (s *Source) messageHandler() func(jetstream.Msg) {
 			_ = m.Nak()
 			return
 		}
+		event.Header = cone.Header(m.Headers())
 		s.responseAndEvents <- &responseAndEvent{Event: event, m: m}
 	}
 }
