@@ -1,10 +1,19 @@
 # cone 🗼
 
-A generic event consumer with an `http.Server`-like interface.
+The goal of `cone` is to provide an easy to use event handler implementation
+that can support a multitude of event backends.
 
-Supports any event backend that implements the `Source` interface.
+---
 
-## Usage
+### Table of contents
+
+- [Usage](#usage)
+- [Middleware](#middleware)
+- [Todo](#todo)
+
+---
+
+# Usage
 
 ```go
 // Configure handlers
@@ -26,7 +35,7 @@ c := cone.New(s, h)
 c.ListenAndConsume()
 ```
 
-## Middleware
+# Middleware
 
 Middleware can be placed around a specific handler.
 
@@ -38,23 +47,26 @@ middleware := func(next cone.Handler) cone.Handler {
     }
 }
 
+var handler cone.HandlerFunc = func(r cone.Response, e *cone.Event) {
+    _ = r.Ack()
+}
 
 h := cone.NewHandlerMux()
-h.HandlerFunc("event.subject", middleware())
+h.Handler("event.subject", middleware(handler))
 ```
 
 Or the whole mux.
 
 ```go
-globalMiddleware := func(next cone.Handler) cone.Handler {
+middleware := func(next cone.Handler) cone.Handler {
     return func(r cone.Response, e *cone.Event) {
         next.Serve(r, e)
     }
 }
 
-h := cone.NewHandlerMux()
 s := conetest.NewSource()
-c := cone.New(s, globalMiddleware(h))
+h := cone.NewHandlerMux()
+c := cone.New(s, middleware(h))
 ```
 
 # Todo
