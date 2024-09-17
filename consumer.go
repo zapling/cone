@@ -12,16 +12,13 @@ var (
 	ErrConsumerStopped = errors.New("consumer stopped")
 )
 
-func New(source Source) *Consumer {
-	return &Consumer{
-		source:   source,
-		handlers: make(map[string]Handler),
-	}
+func New(source Source, handler Handler) *Consumer {
+	return &Consumer{source: source, handler: handler}
 }
 
 type Consumer struct {
-	source   Source
-	handlers map[string]Handler
+	source  Source
+	handler Handler
 
 	activeHandles sync.WaitGroup
 
@@ -29,47 +26,8 @@ type Consumer struct {
 	inShutdown atomic.Bool
 }
 
-func (c *Consumer) Handle(subject string, handler Handler) {
-	err := c.register(subject, handler)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (c *Consumer) HandleFunc(subject string, handlerFunc HandlerFunc) {
-	err := c.register(subject, handlerFunc)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (c *Consumer) register(subject string, handler Handler) error {
-	if c.isRunning.Load() {
-		return fmt.Errorf("not allowed to register handler while running")
-	}
-
-	if subject == "" {
-		return fmt.Errorf("empty subject is not allowed")
-	}
-
-	c.handlers[subject] = handler
-	return nil
-}
-
 func (c *Consumer) Serve(r Response, e *Event) {
-	if err := c.serveEvent(r, e); err != nil {
-		panic(err)
-	}
-}
-
-func (c *Consumer) serveEvent(r Response, e *Event) error {
-	handler, ok := c.handlers[e.Subject]
-	if !ok {
-		return r.Nak()
-	}
-
-	handler.Serve(r, e)
-	return r.Ack()
+	c.handler.Serve(r, e)
 }
 
 func (c *Consumer) ListenAndConsume() error {
@@ -79,6 +37,10 @@ func (c *Consumer) ListenAndConsume() error {
 
 	if c.source == nil {
 		return fmt.Errorf("source is nil")
+	}
+
+	if c.handler == nil {
+		return fmt.Errorf("handler is nil")
 	}
 
 	c.isRunning.Swap(true)
