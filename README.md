@@ -72,7 +72,7 @@ c := cone.New(s, middleware(h))
 # Todo
 
 - [ ] Event context
-- [ ] Event headers
+- [X] Event headers
 - [X] Handler middleware
 - [ ] Consumer subject wildcard `event.*`
 - [ ] Source benchmark (Jetstream)
