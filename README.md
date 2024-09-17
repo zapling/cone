@@ -71,7 +71,7 @@ c := cone.New(s, middleware(h))
 
 # Todo
 
-- [ ] Event context
+- [X] Event context
 - [X] Event headers
 - [X] Handler middleware
 - [ ] Consumer subject wildcard `event.*`
