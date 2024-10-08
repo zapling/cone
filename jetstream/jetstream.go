@@ -82,13 +82,22 @@ func (s *Source) messageHandler() func(jetstream.Msg) {
 
 type responseAndEvent struct {
 	*cone.Event
-	m jetstream.Msg
+	m            jetstream.Msg
+	responseSent bool
 }
 
 func (e *responseAndEvent) Ack() error {
+	if e.responseSent {
+		return nil
+	}
+	e.responseSent = true
 	return e.m.Ack()
 }
 
 func (e *responseAndEvent) Nak() error {
+	if e.responseSent {
+		return nil
+	}
+	e.responseSent = true
 	return e.m.Nak()
 }
