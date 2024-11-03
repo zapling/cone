@@ -12,7 +12,13 @@ import (
 var (
 	_ cone.Source   = &Source{}
 	_ cone.Response = &responseAndEvent{}
+	_ Response      = &responseAndEvent{}
 )
+
+type Response interface {
+	cone.Response
+	NakWithDelay(delay time.Duration) error
+}
 
 func New(consumer jetstream.Consumer, opts ...jetstream.PullConsumeOpt) *Source {
 	return &Source{consumer: consumer, opts: opts}
@@ -100,4 +106,11 @@ func (e *responseAndEvent) Nak() error {
 	}
 	e.responseSent = true
 	return e.m.Nak()
+}
+
+func (e *responseAndEvent) NakWithDelay(delay time.Duration) error {
+	if e.responseSent {
+		return nil
+	}
+	return e.m.NakWithDelay(delay)
 }
