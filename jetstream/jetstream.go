@@ -112,5 +112,6 @@ func (e *responseAndEvent) NakWithDelay(delay time.Duration) error {
 	if e.responseSent {
 		return nil
 	}
+	e.responseSent = true
 	return e.m.NakWithDelay(delay)
 }
