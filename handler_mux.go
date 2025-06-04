@@ -3,11 +3,15 @@ package cone
 import "fmt"
 
 func NewHandlerMux() *HandlerMux {
-	return &HandlerMux{handlers: make(map[string]Handler)}
+	return &HandlerMux{
+		AckUnknownSubjects: false,
+		handlers:           make(map[string]Handler),
+	}
 }
 
 type HandlerMux struct {
-	handlers map[string]Handler
+	AckUnknownSubjects bool
+	handlers           map[string]Handler
 }
 
 func (h *HandlerMux) Handle(subject string, handler Handler) {
@@ -45,6 +49,9 @@ func (h *HandlerMux) Serve(r Response, e *Event) {
 func (h *HandlerMux) serveEvent(r Response, e *Event) error {
 	handler, ok := h.handlers[e.Subject]
 	if !ok {
+		if h.AckUnknownSubjects {
+			return r.Ack()
+		}
 		return r.Nak()
 	}
 

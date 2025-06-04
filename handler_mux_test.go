@@ -151,6 +151,16 @@ func TestServe(t *testing.T) {
 		}
 	})
 
+	t.Run("Unregistred event should ack if AckUnknownSubjects=true is set", func(t *testing.T) {
+		c := cone.NewHandlerMux()
+		c.AckUnknownSubjects = true
+		r := conetest.NewRecorder()
+		c.Serve(r, conetest.NewEvent("not.wanted", nil))
+		if r.Result() != conetest.Ack {
+			t.Errorf("Expected %s but got: %s", conetest.Ack, r.Result())
+		}
+	})
+
 	t.Run("Registred event should ack", func(t *testing.T) {
 		c := cone.NewHandlerMux()
 		c.HandleFunc("is.wanted", func(_ cone.Response, _ *cone.Event) {})
